@@ -40,65 +40,11 @@ public class Main {
 
 
         Calendar dummyFrom = Calendar.getInstance();
-        Stock stock = YahooFinance.get("TSLA", dummyFrom);
+        dummyFrom.add(Calendar.DAY_OF_MONTH, -5);
+        Stock stock = YahooFinance.get("TSLA", dummyFrom, Calendar.getInstance(), Interval.DAILY);
         stock.print();
-        System.out.println(DATE_FORMAT.format(stock.getHistory().get(0).getDate().getTime()));
-        System.out.println(stock.getHistory().get(0).getClose().doubleValue() );
-//        Calendar from = Calendar.getInstance();
-//        Calendar smallFrom = Calendar.getInstance();
-//        Calendar to = Calendar.getInstance();
-//
-//        int bigSMADays = 200;
-//        int smolSMADays = 50;
-//
-//        from.add(Calendar.DAY_OF_MONTH, -2 * bigSMADays);
-//        smallFrom.add(Calendar.DAY_OF_MONTH, -2 * smolSMADays);
-//
-//        System.out.println(DATE_FORMAT.format(from.getTime()));
-//        System.out.println(DATE_FORMAT.format(to.getTime()));
-//
-//        Stock google = YahooFinance.get("TSLA", from, to, Interval.DAILY);
-//
-//        List<HistoricalQuote> gogHist = getHistoricalData("TSLA", 200);
-//
-//
-//
-//        System.out.println(DATE_FORMAT.format(gogHist.get(0).getDate().getTime()));
-//        System.out.println(gogHist.get(0).getClose());
-//
-//        double bigSMACounter = 0;
-//        double smolSMACounter = 0;
-//
-//        int smolCounter = 0;
-//        int bigCounter = 0;
-//
-//        for (HistoricalQuote histQuote : gogHist){
-//            bigSMACounter = bigSMACounter + histQuote.getClose().doubleValue();
-//            bigCounter++;
-//            if (smolCounter<smolSMADays){
-//                smolSMACounter = smolSMACounter + histQuote.getClose().doubleValue();
-//                smolCounter++;
-//                System.out.println(DATE_FORMAT.format(histQuote.getDate().getTime()));
-//            }
-//
-//            if (bigCounter >= bigSMADays){
-//                break;
-//            }
-//        }
-//
-//        System.out.println(bigCounter);
-//        System.out.println(smolCounter);
-//
-//        double bigSMA = bigSMACounter / bigCounter;
-//        double smolSMA = smolSMACounter / smolCounter;
-//
-//        System.out.println("bigSMA: " + bigSMA);
-//        System.out.println("smolSMA: " + smolSMA);
-//
-//        countSMA(gogHist, 200, false);
-//        countSMA(gogHist, 50, false);
-//
-//        crossCalculator("TSLA",50,200);
+        System.out.println(DATE_FORMAT.format(stock.getHistory().get(stock.getHistory().size() - 1).getDate().getTime()));
+        System.out.println(stock.getHistory().get(stock.getHistory().size() - 1).getClose().doubleValue() );
 
 
         List<String>stks = makeStkListFromFile(STKS_PATH);
@@ -109,10 +55,6 @@ public class Main {
             System.out.println("STK Symbol: " + stk + " Counter: " + counter++);
 
            });
-
-
-
-
 
     }
 
