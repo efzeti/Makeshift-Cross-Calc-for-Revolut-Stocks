@@ -9,6 +9,7 @@ import yahoofinance.histquotes.Interval;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
@@ -29,14 +30,25 @@ public class Main {
     public static final String STKS_PATH = "src\\main\\resources\\stk.txt";
 
     public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy");
+    public static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
+
+    public static String golds = ANSI_RESET + ANSI_YELLOW;
+    public static String deaths = ANSI_RESET + ANSI_PURPLE;
+    public static String crossDate = null;
+
+    public static List<String> goldCsvList = new ArrayList<>();
+    public static List<String> deathCsvList = new ArrayList<>();
 
 
     private static final Logger log = LoggerFactory.getLogger(Main.class);
 
-    public static int counter = 1;
+    public static int counter = 0;
 
     public static void main(String[] args) throws IOException {
 
+
+        goldCsvList.add("symbol,date,link\n");
+        deathCsvList.add("symbol,date,link\n");
 
 
         Calendar dummyFrom = Calendar.getInstance();
@@ -44,18 +56,49 @@ public class Main {
         Stock stock = YahooFinance.get("TSLA", dummyFrom, Calendar.getInstance(), Interval.DAILY);
         stock.print();
         System.out.println(DATE_FORMAT.format(stock.getHistory().get(stock.getHistory().size() - 1).getDate().getTime()));
-        System.out.println(stock.getHistory().get(stock.getHistory().size() - 1).getClose().doubleValue() );
+        System.out.println(stock.getHistory().get(stock.getHistory().size() - 1).getClose().doubleValue());
 
 
         List<String>stks = makeStkListFromFile(STKS_PATH);
 
+        Calendar now = Calendar.getInstance();
+
+
+
         stks.parallelStream().forEach( stk -> {
 
+            counter++;
+            int internalCounter = counter;
+            System.out.println("STK Symbol: " + stk + " Counter: " + counter + " has started.");
             crossCalculator(stk, 15, 50);
-            System.out.println("STK Symbol: " + stk + " Counter: " + counter++);
+            System.out.println("STK Symbol: " + stk + " Counter: " + internalCounter + " has finished.");
 
            });
 
+        System.out.format("\n" + ANSI_CYAN + "Todays results (%s):\n",crossDate);
+        System.out.println(ANSI_YELLOW + golds + ANSI_RESET);
+        System.out.println(ANSI_PURPLE + deaths + ANSI_RESET);
+
+
+        System.out.println(TIME_FORMAT.format(now.getTime()));
+        System.out.println(TIME_FORMAT.format(Calendar.getInstance().getTime()));
+
+        FileWriter goldCsvWriter = new FileWriter("history\\gold\\" + crossDate + ".csv");
+        FileWriter deathCsvWriter = new FileWriter("history\\death\\" + crossDate + ".csv");
+
+
+        for (String row : goldCsvList){
+            goldCsvWriter.append(row);
+        }
+
+        for (String row : deathCsvList){
+            deathCsvWriter.append(row);
+        }
+
+        goldCsvWriter.flush();
+        goldCsvWriter.close();
+        deathCsvWriter.flush();
+        deathCsvWriter.close();
     }
 
     public static List<String> makeStkListFromFile(String filePath){
@@ -150,17 +193,27 @@ public class Main {
         double bigSMA = countSMA(histData, bigSMADays, false);
         double bigSMAMinusDay = countSMA(histData, bigSMADays, true);
 
-//        System.out.println(smolSMA);
-//        System.out.println(smolSMAMinusDay);
-//        System.out.println(bigSMA);
-//        System.out.println(bigSMAMinusDay);
+
+
 
         if ((smolSMA > bigSMA) && (smolSMAMinusDay < bigSMAMinusDay)){
             System.out.format(ANSI_GREEN + "%s has made a golden cross\n" + ANSI_RESET, stkSymbol);
             System.out.printf("(%.2f > %.2f) && (%.2f < %.2f)\n", smolSMA, bigSMA, smolSMAMinusDay, bigSMAMinusDay);
+
+            golds = golds + String.format("%s has made a golden cross\n", stkSymbol);
+            golds = golds + String.format("https://finance.yahoo.com/quote/%s?p=%s\n",stkSymbol, stkSymbol);
+
+            goldCsvList.add(crossDate + "," + stkSymbol + "," + String.format("https://finance.yahoo.com/quote/%s?p=%s",stkSymbol, stkSymbol) + "\n");
+
+
         } if ((smolSMA < bigSMA) && (smolSMAMinusDay > bigSMAMinusDay)){
             System.out.format(ANSI_PURPLE + "%s has made a death cross\n" + ANSI_RESET, stkSymbol);
             System.out.printf("(%.2f < %.2f) && (%.2f > %.2f)\n", smolSMA, bigSMA, smolSMAMinusDay, bigSMAMinusDay);
+
+            deaths = deaths + String.format("%s has made a death cross\n", stkSymbol);
+            deaths = deaths + String.format("https://finance.yahoo.com/quote/%s?p=%s\n",stkSymbol, stkSymbol);
+
+            deathCsvList.add(crossDate + "," + stkSymbol + "," + String.format("https://finance.yahoo.com/quote/%s?p=%s",stkSymbol, stkSymbol) + "\n");
         }
 
 
@@ -168,19 +221,20 @@ public class Main {
 
     public static List<HistoricalQuote> getHistoricalData(String stkSymbol, int daysPast){
 
+
         Calendar from = Calendar.getInstance();
         Calendar to = Calendar.getInstance();
 
         from.add(Calendar.DAY_OF_MONTH, -2 * daysPast);
 
-//        System.out.println(DATE_FORMAT.format(from.getTime()));
-//        System.out.println(DATE_FORMAT.format(to.getTime()));
 
         Stock stock = null;
         try {
             stock = YahooFinance.get(stkSymbol, from, to, Interval.DAILY);
         } catch (IOException e) {
             System.out.println(ANSI_RED + stkSymbol + " couldn't be initialized." + ANSI_RESET);
+//            e.printStackTrace();
+//            System.out.println(e.getMessage());
             return null;
         }
 
@@ -188,7 +242,8 @@ public class Main {
         try {
             histData = stock.getHistory();
         } catch (IOException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
+            System.out.println(ANSI_RED +"History for " + stkSymbol + " couldn't be initialized." + ANSI_RESET);
         } catch (NullPointerException e2){
             System.out.println(ANSI_RED +"History for " + stkSymbol + " couldn't be initialized." + ANSI_RESET);
             return null;
@@ -202,6 +257,13 @@ public class Main {
         }
 
         List<HistoricalQuote> readyList = List.copyOf(histData.subList(0, daysPast + 1));
+
+        if (crossDate == null){
+            crossDate = DATE_FORMAT.format(readyList.get(0).getDate().getTime());
+            System.out.println("crossDate set to " + crossDate);
+        }
+
+
 
         return readyList;
 

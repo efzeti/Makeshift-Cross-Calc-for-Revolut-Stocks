@@ -1,2 +1,4 @@
 # Project exclude paths
 /target/
+/history/gold/
+/history/death/
