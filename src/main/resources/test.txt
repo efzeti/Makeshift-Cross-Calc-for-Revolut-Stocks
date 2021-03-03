@@ -1,11 +1,4 @@
-O
-Q
-W
-E
-R
-T
-Y
-U
-I
-O
-P
+KNX
+SKX
+WWE
+HAL
