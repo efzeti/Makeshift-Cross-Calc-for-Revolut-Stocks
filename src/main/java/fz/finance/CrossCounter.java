@@ -236,12 +236,12 @@ public class CrossCounter {
 
     private void writeGoldCSVToFile(List<String> dataList) throws IOException {
 
-        simpleCsvFileWriter.writeCSVToFile(dataList, "symbol,date,link\n", "history\\gold\\", dataList.get(0).split(",")[0]);
+        simpleCsvFileWriter.writeCSVToFile(dataList, "symbol,date,link\n", "history\\gold\\", crossDate);
     }
 
     private void writeDeathCSVToFile(List<String> dataList) throws IOException {
 
-        simpleCsvFileWriter.writeCSVToFile(dataList, "symbol,date,link\n", "history\\death\\", dataList.get(0).split(",")[0]);
+        simpleCsvFileWriter.writeCSVToFile(dataList, "symbol,date,link\n", "history\\death\\", crossDate);
     }
 
 
